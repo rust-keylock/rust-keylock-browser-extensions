@@ -1,0 +1,44 @@
+{
+
+  "manifest_version": 2,
+  "name": "rust-keylock",
+  "version": "0.15.0",
+  "description": "Browser extension for the rust-keylock password manager",
+  "icons": {
+    "48": "icons/rkl-48.png",
+    "96": "icons/rkl-96.png"
+  },
+  "homepage_url": "https://rust-keylock.github.io/",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "rust-keylock@proton.me",
+      "strict_min_version": "54.0a1"
+    }
+  },
+
+  "background": {
+    "scripts": ["background.js", "pkg/rust_keylock_browser_extension.js"],
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentscript.js"]
+    }
+  ],
+
+  "browser_action": {
+    "default_icon": "icons/rkl-48.png"
+  },
+
+  "options_ui": {
+    "page": "options/options.html"
+  },
+
+  "permissions": [
+    "contextMenus",
+    "*://127.0.0.1/*"
+  ]
+}
