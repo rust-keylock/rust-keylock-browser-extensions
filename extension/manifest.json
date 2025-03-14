@@ -30,7 +30,9 @@
   ],
 
   "browser_action": {
-    "default_icon": "icons/rkl-48.png"
+    "default_icon": "icons/rkl-48.png",
+    "default_title": "rust-keylock",
+    "default_popup": "popup/popup.html"
   },
 
   "options_ui": {
@@ -39,6 +41,8 @@
 
   "permissions": [
     "contextMenus",
-    "*://127.0.0.1/*"
+    "*://127.0.0.1/*",
+    "tabs",
+    "storage"
   ]
 }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+    <div class="centered">
+        <h2>Rust Keylock Password Manager</h2>
+    </div>
+
+    <div class="dropdown" id="connectedDiv">
+        <div class="centered">
+            <img src="../icons/rkl-96.png" alt="rust-keylock"/>
+        </div>
+        <h3>Available Passwords</h3>
+        <p>Ticking a password will make it always available in the context menu when filling</p>
+        <input type="text" placeholder="Find a password" id="userInput" class="userInput">
+        <div id="passwordsDropdown" class="dropdown-content">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="disconnectedDiv">
+        <div class="centered">
+            <img src="../icons/rkl-96.png" alt="rust-keylock"/>
+        </div>
+        <h3>Not connected</h3>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

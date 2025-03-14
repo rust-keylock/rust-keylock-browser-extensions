@@ -1,8 +1,25 @@
+use std::{str::from_utf8, sync::Mutex};
+
+use lazy_static::lazy_static;
 use spake2::{Ed25519Group, Identity, Password, Spake2};
 use wasm_bindgen::prelude::*;
 
-const RKL_LIB_BASE: &str = "http://127.0.0.1:9876/";
+const RKL_GET_ALL: &str = "http://127.0.0.1:9876/entries";
+const RKL_GET_DECRYPTED: &str = "http://127.0.0.1:9876/decrypted";
 const RKL_PAKE: &str = "http://127.0.0.1:9876/pake";
+
+lazy_static! {
+    static ref SESSION_KEY: Mutex<Option<Vec<u8>>> = Mutex::new(None);
+}
+
+fn get_session_key() -> Result<Vec<u8>, String> {
+    let session_key_opt = SESSION_KEY.lock().map_err(|e| format!("{e}"))?.clone();
+    if let Some(session_key) = session_key_opt {
+        Ok(session_key)
+    } else {
+        Err("Session key is not established yet".to_string())
+    }
+}
 
 #[wasm_bindgen]
 extern "C" {
@@ -29,14 +46,72 @@ fn main() -> Result<(), JsValue> {
 
 #[wasm_bindgen]
 pub async fn connect_to_rkl() -> Result<String, String> {
-    // let body = reqwest::get()
-    //     .await
-    //     .map_err(|e| format!("{e}"))?
-    //     .text()
-    //     .await
-    //     .map_err(|e| format!("{e}"))?;
     let key = execute_pake("password").await?;
-    Ok("".to_string())
+    let mut session_key_opt = SESSION_KEY.lock().map_err(|e| format!("{e}"))?;
+    *session_key_opt = Some(key);
+    Ok("OK".to_string())
+}
+
+#[wasm_bindgen]
+pub async fn get_all() -> Result<String, String> {
+    log("Getting all entries");
+
+    let client = reqwest::Client::new();
+
+    let bytes = client
+        .get(RKL_GET_ALL)
+        .send()
+        .await
+        .map_err(|e| format!("{e}"))?
+        .bytes()
+        .await
+        .map_err(|e| format!("{e}"))?;
+
+    log("Retrieved entries");
+
+    Ok(from_utf8(&bytes).map_err(|e| format!("{e}"))?.to_string())
+}
+
+#[wasm_bindgen]
+pub async fn get_filtered(filter: String) -> Result<String, String> {
+    log(&format!("Getting entries using filter: {filter}"));
+
+    let client = reqwest::Client::new();
+    let target = format!("{RKL_GET_ALL}?filter={filter}");
+
+    let bytes = client
+        .get(target)
+        .send()
+        .await
+        .map_err(|e| format!("{e}"))?
+        .bytes()
+        .await
+        .map_err(|e| format!("{e}"))?;
+
+    log("Retrieved entries");
+
+    Ok(from_utf8(&bytes).map_err(|e| format!("{e}"))?.to_string())
+}
+
+#[wasm_bindgen]
+pub async fn get_decrypted(name: String) -> Result<String, String> {
+    log(&format!("Getting decrypted with name: {name}"));
+
+    let client = reqwest::Client::new();
+    let target = format!("{RKL_GET_DECRYPTED}/{name}");
+
+    let bytes = client
+        .get(target)
+        .send()
+        .await
+        .map_err(|e| format!("{e}"))?
+        .bytes()
+        .await
+        .map_err(|e| format!("{e}"))?;
+
+    log("Retrieved entries");
+
+    Ok(from_utf8(&bytes).map_err(|e| format!("{e}"))?.to_string())
 }
 
 async fn execute_pake(password: &str) -> Result<Vec<u8>, String> {
