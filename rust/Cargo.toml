@@ -24,6 +24,8 @@ wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4"
 reqwest= {version = "0.12"}
 spake2 = "0.4"
+aes-gcm = "0.10"
+base64 = "0.22"
 # getrandom version should be 0.2 because this is used by spake2 0.4. Until spake2 uses a laer getrandom version, it cannot be upgraded
 getrandom = { version = "0.2", default-features = false, features = ["js"] }
 

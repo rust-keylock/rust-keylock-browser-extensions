@@ -39,7 +39,12 @@ async function fillPasswords(connected) {
         const sending = browser.runtime.sendMessage({
             command: "getAll",
         });
-        sending.then(showPasswords, onError);
+        sending.then(showPasswords)
+            .catch((err) => {
+                onError(err);
+                connectedDiv.style.display = "none";
+                disconnectedDiv.style.display = "";
+            });
     } else {
         connectedDiv.style.display = "none";
         disconnectedDiv.style.display = "";

@@ -51,7 +51,10 @@ function handleMessage(request, sender, sendResponse) {
       .then((resp) => {
         sendResponse({ response: resp });
       })
-      .catch(onError);
+      .catch((err) => {
+        onError(err);
+        sendResponse({ response: `"${err}"`});
+      });
   } else if (request.command == "connectToRkl") {
     do_connect_to_rkl()
       .then((resp) => {
