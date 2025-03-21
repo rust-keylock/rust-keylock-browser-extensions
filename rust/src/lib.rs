@@ -75,6 +75,16 @@ pub async fn connect_to_rkl() -> Result<String, String> {
 }
 
 #[wasm_bindgen]
+pub async fn reset_pake() -> Result<String, String> {
+    let mut session_key_opt = SESSION_KEY.lock().map_err(|e| format!("{e}"))?;
+    *session_key_opt = None;
+    let mut tkt = TICKET.lock().map_err(|e| format!("{e}"))?;
+    *tkt = 0;
+
+    Ok("OK".to_string())
+}
+
+#[wasm_bindgen]
 pub async fn get_all() -> Result<String, String> {
     log("Getting all entries");
 
@@ -89,6 +99,8 @@ pub async fn get_all() -> Result<String, String> {
         .bytes()
         .await
         .map_err(|e| format!("{e}"))?;
+
+    log("Retrieved bytes");
 
     let decrypted_bytes = decrypt(&get_session_key()?, &bytes)?;
     log("Retrieved entries");
@@ -166,15 +178,19 @@ async fn execute_pake(password: &str) -> Result<(Vec<u8>, usize), String> {
         .await
         .map_err(|e| format!("{e}"))?;
 
+    log("Got PAKE response");
+
     let encrypted_ticket_opt = response
         .headers()
         .get(TICKET_HEADER)
         .map(|header_value| header_value.to_str())
         .map(|to_str_result| to_str_result.unwrap_or("0").to_string());
 
+    log("Got ticket");
+
     let inbound_bytes = response.bytes().await.map_err(|e| format!("{e}"))?;
 
-    log("Retrieved inbound bytestring");
+    log("Got inbound bytestring");
 
     let key = s1.finish(&inbound_bytes).unwrap();
     let ticket = encrypted_ticket_opt
@@ -187,6 +203,7 @@ async fn execute_pake(password: &str) -> Result<(Vec<u8>, usize), String> {
                 .unwrap_or(0)
         })
         .unwrap_or(0);
+
     log("Key generated and received ticket");
     Ok((key, ticket))
 }
@@ -214,7 +231,6 @@ fn decrypt_base_64(key: &[u8], base64_string: &str) -> Result<Vec<u8>, String> {
     let encrypted_bytes = general_purpose::STANDARD
         .decode(&base64_string)
         .map_err(|error| error.to_string())?;
-    log(format!("------{:x?}", encrypted_bytes).as_str());
     decrypt(key, &encrypted_bytes)
 }
 

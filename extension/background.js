@@ -1,4 +1,4 @@
-import init, { add, connect_to_rkl, get_all, get_filtered, get_decrypted } from './pkg/rust_keylock_browser_extension.js';
+import init, { add, connect_to_rkl, get_all, get_filtered, get_decrypted, reset_pake } from './pkg/rust_keylock_browser_extension.js';
 
 browser.contextMenus.onShown.addListener(async (info, tab) => await handleOnContextMenuShown(info, tab));
 browser.contextMenus.onClicked.addListener(async (info, tab) => await handleOnContextMenuClicked(info, tab));
@@ -53,7 +53,7 @@ function handleMessage(request, sender, sendResponse) {
       })
       .catch((err) => {
         onError(err);
-        sendResponse({ response: `"${err}"`});
+        sendResponse({ response: `"${err}"` });
       });
   } else if (request.command == "connectToRkl") {
     do_connect_to_rkl()
@@ -63,10 +63,19 @@ function handleMessage(request, sender, sendResponse) {
       })
       .catch((err) => {
         onError(err);
-        sendResponse({ response: `"${err}"`});
+        sendResponse({ response: `"${err}"` });
+      });
+  } else if (request.command == "resetPake") {
+    reset_pake()
+      .then((resp) => {
+        console.debug(`Reset PAKE: ${resp}`);
+        sendResponse({ response: resp });
+      })
+      .catch((err) => {
+        onError(err);
+        sendResponse({ response: `"${err}"` });
       });
   }
-
   // Need to return true for async handling
   // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#sending_an_asynchronous_response_using_sendresponse
   return true;

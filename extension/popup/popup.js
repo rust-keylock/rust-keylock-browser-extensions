@@ -2,8 +2,27 @@ const userInput = document.querySelector("#userInput");
 const passwordsDropdownDiv = document.querySelector("#passwordsDropdown");
 const connectedDiv = document.querySelector("#connectedDiv");
 const disconnectedDiv = document.querySelector("#disconnectedDiv");
+const connectButton = document.querySelector("#connectButton");
 
 userInput.addEventListener("keyup", filterFunction);
+connectButton.addEventListener("click", async () => {
+    await sendResetPakeMessage();
+    await sendConnectMessage();
+    window.close();
+});
+
+async function sendResetPakeMessage() {
+    console.debug("Resetting PAKE");
+    try {
+        let responseObject = await browser.runtime.sendMessage({
+            command: "resetPake",
+        })
+        let response = responseObject.response;
+        console.debug("Received response resetting PAKE: " + response);
+    } catch (err) {
+        onError(err);
+    }
+}
 
 async function sendConnectMessage() {
     console.debug("Sending message to connect to RKL");
