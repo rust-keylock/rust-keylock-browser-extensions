@@ -36,8 +36,8 @@ async function initializeRustKeylockWasm() {
   // And afterwards we can use all the functionality defined in wasm.
 }
 
-async function do_connect_to_rkl() {
-  return await connect_to_rkl();
+async function do_connect_to_rkl(token) {
+  return await connect_to_rkl(token);
 }
 
 async function do_get_all() {
@@ -56,7 +56,11 @@ function handleMessage(request, sender, sendResponse) {
         sendResponse({ response: `"${err}"` });
       });
   } else if (request.command == "connectToRkl") {
-    do_connect_to_rkl()
+    browser.storage.local.get()
+      .then((creds) => {
+        let token = creds.authCredentials.token;
+        return do_connect_to_rkl(token);
+      })
       .then((resp) => {
         console.debug(`Connected to rust-keylock: ${resp}`);
         sendResponse({ response: resp });

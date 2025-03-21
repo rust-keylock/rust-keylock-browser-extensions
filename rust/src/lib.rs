@@ -61,9 +61,9 @@ fn main() -> Result<(), JsValue> {
 }
 
 #[wasm_bindgen]
-pub async fn connect_to_rkl() -> Result<String, String> {
+pub async fn connect_to_rkl(token: String) -> Result<String, String> {
     if let Err(_) = get_session_key() {
-        let (key, ticket) = execute_pake("password").await?;
+        let (key, ticket) = execute_pake(&token).await?;
         let mut session_key_opt = SESSION_KEY.lock().map_err(|e| format!("{e}"))?;
         *session_key_opt = Some(key);
         let mut tkt = TICKET.lock().map_err(|e| format!("{e}"))?;
