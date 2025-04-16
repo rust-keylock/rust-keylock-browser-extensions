@@ -102,12 +102,27 @@ pub async fn get_all() -> Result<String, String> {
 
     log("Retrieved bytes");
 
-    let decrypted_bytes = decrypt(&get_session_key()?, &bytes)?;
-    log("Retrieved entries");
+    let entries_res = get_session_key()
+        .and_then(|session_key| {
+            log("Retrieved session key");
+            decrypt(&session_key, &bytes)
+        })
+        .and_then(|decrypted_bytes| {
+            log("Decrypted bytes");
+            match from_utf8(&decrypted_bytes) {
+                Ok(utf8_str) => {
+                    log("Transformed to UTF-8");
+                    Ok(utf8_str.to_string())
+                }
+                Err(error) => Err(error.to_string()),
+            }
+        });
 
-    Ok(from_utf8(&decrypted_bytes)
-        .map_err(|e| format!("{e}"))?
-        .to_string())
+    if let Err(ref error) = entries_res {
+        log(&format!("Error in getall: {error}"));
+    }
+
+    entries_res
 }
 
 #[wasm_bindgen]
@@ -153,7 +168,7 @@ pub async fn get_decrypted(name: String) -> Result<String, String> {
         .map_err(|e| format!("{e}"))?;
 
     let decrypted_bytes = decrypt(&get_session_key()?, &bytes)?;
-    log("Retrieved entries");
+    log("Retrieved entries...d");
 
     Ok(from_utf8(&decrypted_bytes)
         .map_err(|e| format!("{e}"))?
@@ -220,11 +235,15 @@ fn encrypt_to_base_64(key: &[u8], data: &[u8]) -> Result<String, String> {
 fn decrypt(key: &[u8], product: &[u8]) -> Result<Vec<u8>, String> {
     let key: &Key<Aes256Gcm> = key.into();
     let cipher = Aes256Gcm::new(&key);
-    let (nonce, data) = product.split_at(12);
-    let plain = cipher
-        .decrypt(Nonce::from_slice(nonce), data)
-        .map_err(|e| format!("{e}"))?;
-    Ok(plain)
+    if product.len() > 12 {
+        let (nonce, data) = product.split_at(12);
+        let plain = cipher
+            .decrypt(Nonce::from_slice(nonce), data)
+            .map_err(|e| format!("{e}"))?;
+        Ok(plain)
+    } else {
+        Err(format!("Unexpected bytes to decrypt."))
+    }
 }
 
 fn decrypt_base_64(key: &[u8], base64_string: &str) -> Result<Vec<u8>, String> {

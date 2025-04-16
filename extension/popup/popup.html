@@ -11,12 +11,44 @@
         <h2>Rust Keylock Password Manager</h2>
     </div>
 
+    <div class="centered">
+        <img src="../icons/rkl-96.png" alt="rust-keylock" />
+    </div>
+
     <div class="dropdown" id="connectedDiv">
         <div class="centered">
-            <img src="../icons/rkl-96.png" alt="rust-keylock" />
+            <table class="centered">
+                <tbody>
+                    <tr>
+                        <td>
+                            <h3>Available Passwords</h3>
+                        </td>
+                        <td>
+                            <div class="infoIcon">
+                                <img src="../icons/info-48.png" alt="info" height="24" width="24">
+                                <span class="tooltiptext">
+                                    <p>The rust-keylock extension offers passwords that are saved in the rust-keylock
+                                        application to be used in Web pages.
+                                    </p>
+                                    <p>When you visit a Web page where you need to provide credentials, right click on
+                                        the input/password field. Any
+                                        password entries that are created for the URL of this Web page will be offered
+                                        to fill-in.</p>
+                                    <p>Additionally, you may also select any password entries from the list below so
+                                        that they are
+                                        always offered for filling-in,
+                                        regardless if the visited page URL matches the URL defined in the password
+                                        entry. </p>
+                                </span>
+                                </img>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
         </div>
-        <h3>Available Passwords</h3>
-        <p>Ticking a password will make it always available in the context menu when filling</p>
+        <p>Ticking a password will make it always available in the rust-keylock context menu</p>
         <input type="text" placeholder="Find a password" id="userInput" class="userInput">
         <div id="passwordsDropdown" class="dropdown-content">
             <table>
@@ -30,13 +62,10 @@
         </div>
     </div>
     <div id="disconnectedDiv">
-        <div class="centered">
-            <img src="../icons/rkl-96.png" alt="rust-keylock" />
-        </div>
         <h3>Not connected</h3>
+        <p>Please make sure the rusk-keylock application is running is aunlocked.</p>
+        <button type="button" id="connectButton">Click to Reset</button>
     </div>
-    <h3>Something might have gone wrong... </h3>
-    <button type="button" id="connectButton">Click to Reset</button>
 
     <script src="popup.js"></script>
 </body>

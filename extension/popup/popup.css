@@ -67,3 +67,28 @@ body {
 .rightColumn {
     text-align: right;
 }
+
+.infoIcon {
+    text-align: left;
+    position: relative;
+    display: inline-block;
+}
+
+.infoIcon .tooltiptext {
+    visibility: hidden;
+    width: 330px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    position: absolute;
+    z-index: 2;
+    top: -5px;
+    right: 105%;
+}
+
+.infoIcon:hover .tooltiptext {
+    visibility: visible;
+  }
