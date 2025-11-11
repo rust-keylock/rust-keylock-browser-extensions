@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "rust-keylock",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Browser extension for the rust-keylock password manager",
   "icons": {
     "48": "icons/rkl-48.png",
