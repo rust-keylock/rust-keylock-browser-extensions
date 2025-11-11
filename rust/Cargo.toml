@@ -20,7 +20,7 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 lazy_static = "1.5.0"
-wasm-bindgen = "0.2.100"
+wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 reqwest= {version = "0.12"}
 spake2 = "0.4"
