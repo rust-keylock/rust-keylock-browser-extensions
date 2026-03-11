@@ -79,7 +79,28 @@ async function showPasswords(message) {
     table.appendChild(tbody);
     const entries = JSON.parse(json);
 
-    // await browser.storage.local.clear();
+    // Get the stored entries and clean any stale/invalid ones
+    let storedEntries = await retrieveStoredEntries();
+    storedEntries.forEach(async (storedEntry) => {
+        let isStoredEntryValid = entries.find(e => e.name == storedEntry.name);
+        if (!isStoredEntryValid) {
+            console.debug(`Removing invalid entry ${storedEntry.name} from stored entries`);
+            await handleDbEntry(storedEntry, false);
+        }
+        return true;
+    });
+    // Get the cleaned dtored entries
+    let cleanedStoredEntries = await retrieveStoredEntries();
+    entries.forEach(async (entry) => {
+        let htmlElement = await createHtmlElement(entry, cleanedStoredEntries);
+        tbody.appendChild(htmlElement);
+        return true;
+    });
+
+    passwordsDropdownDiv.classList.toggle("show");
+}
+
+async function retrieveStoredEntries() {
     let stored = await browser.storage.local.get("entries");
     let storedEntries = stored.entries;
     if (storedEntries == undefined) {
@@ -94,13 +115,7 @@ async function showPasswords(message) {
         storedEntries = stored.entries;
         console.debug(`Retrieved storedSettings ${storedEntries}`);
     }
-
-    entries.forEach(async (entry) => {
-        let htmlElement = await createHtmlElement(entry, storedEntries);
-        tbody.appendChild(htmlElement);
-        return true;
-    });
-    passwordsDropdownDiv.classList.toggle("show");
+    return storedEntries;
 }
 
 async function createHtmlElement(entry, storedEntries) {
@@ -133,6 +148,7 @@ async function handleDbEntry(entry, checked) {
     console.debug(`Handling DB for ${entry.name}: ${checked}`);
     let stored = await browser.storage.local.get("entries");
     let storedEntries = Array.from(stored.entries);
+    console.debug(`Stored Entries size: ${storedEntries.length}`);
 
     if (checked) {
         storedEntries.push({ name: entry.name, user: entry.user });
@@ -140,6 +156,7 @@ async function handleDbEntry(entry, checked) {
         storedEntries = storedEntries.filter(savedEntry => savedEntry.name != entry.name);
     }
 
+    console.debug(`New Stored Entries size: ${storedEntries.length}`);
     await browser.storage.local.set({
         entries: storedEntries
     });
