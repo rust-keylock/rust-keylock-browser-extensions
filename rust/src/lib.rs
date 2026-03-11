@@ -168,7 +168,7 @@ pub async fn get_decrypted(name: String) -> Result<String, String> {
         .map_err(|e| format!("{e}"))?;
 
     let decrypted_bytes = decrypt(&get_session_key()?, &bytes)?;
-    log("Retrieved entries...d");
+    log("Retrieved decrypted entry...");
 
     Ok(from_utf8(&decrypted_bytes)
         .map_err(|e| format!("{e}"))?

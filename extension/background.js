@@ -137,15 +137,19 @@ async function doCreateContextMenus(forUrl) {
 }
 
 async function handleOnContextMenuClicked(info, tab) {
-  const entriesJson = await get_decrypted(info.menuItemId);
-  const entries = JSON.parse(entriesJson);
-
-  if (entries.length > 0) {
-    if (entries.length > 1) {
-      console.warn(`"More than one entries found with the name ${info.menuItemId}. Using the first..."`);
+  await get_decrypted(info.menuItemId)
+  .then(async (entriesJson) => {
+    const entries = JSON.parse(entriesJson);
+  
+    if (entries.length > 0) {
+      if (entries.length > 1) {
+        console.warn(`"More than one entries found with the name ${info.menuItemId}. Using the first..."`);
+      }
+      await fillFieldOfTab(tab, entries[0].user, entries[0].pass);
     }
-    await fillFieldOfTab(tab, entries[0].user, entries[0].pass);
-  }
+  })
+  .catch(onError)
+  
 }
 
 async function fillFieldOfTab(tab, user, pass) {
