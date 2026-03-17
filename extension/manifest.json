@@ -5,6 +5,7 @@
   "version": "0.18.0",
   "description": "Browser extension for the rust-keylock password manager",
   "icons": {
+    "16": "icons/rkl-16.png",
     "48": "icons/rkl-48.png",
     "96": "icons/rkl-96.png"
   },
@@ -18,6 +19,9 @@
             "none"
         ]
       }
+    },
+    "gecko_android": {
+      "strict_min_version": "113.0"
     }
   },
 
@@ -37,6 +41,17 @@
     "default_icon": "icons/rkl-48.png",
     "default_title": "rust-keylock",
     "default_popup": "popup/popup.html"
+  },
+
+  "page_action": {
+    "default_icon": {
+      "48": "icons/rkl-16.png",
+      "48": "icons/rkl-48.png",
+      "96": "icons/rkl-96.png"
+    },
+    "default_title": "rust-keylock",
+    "default_popup": "pageActionPopup/pageActionPopup.html",
+    "show_matches": ["https://*/*"]
   },
 
   "options_ui": {

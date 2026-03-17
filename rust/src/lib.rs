@@ -252,18 +252,3 @@ fn decrypt_base_64(key: &[u8], base64_string: &str) -> Result<Vec<u8>, String> {
         .map_err(|error| error.to_string())?;
     decrypt(key, &encrypted_bytes)
 }
-
-#[wasm_bindgen]
-pub fn add(a: u32, b: u32) -> u32 {
-    a + b
-}
-
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, rust-wasm!");
-}

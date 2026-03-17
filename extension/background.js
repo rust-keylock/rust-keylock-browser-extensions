@@ -1,4 +1,4 @@
-import init, { add, connect_to_rkl, get_all, get_filtered, get_decrypted, reset_pake } from './pkg/rust_keylock_browser_extension.js';
+import init, { connect_to_rkl, get_all, get_decrypted, get_filtered, reset_pake } from './pkg/rust_keylock_browser_extension.js';
 
 browser.contextMenus.onShown.addListener(async (info, tab) => await handleOnContextMenuShown(info, tab));
 browser.contextMenus.onClicked.addListener(async (info, tab) => await handleOnContextMenuClicked(info, tab));
@@ -36,17 +36,60 @@ async function initializeRustKeylockWasm() {
   // And afterwards we can use all the functionality defined in wasm.
 }
 
-async function do_connect_to_rkl(token) {
-  return await connect_to_rkl(token);
+async function do_connect_to_rkl() {
+  try {
+    let creds = await browser.storage.local.get();
+    let token = creds.authCredentials.token;
+    let resp = await connect_to_rkl(token);
+    console.debug(`Connected to rust-keylock: ${resp}`);
+    return resp;
+  } catch (err) {
+    onError(err);
+    return "Error while connecting to RKL";
+  }
 }
 
 async function do_get_all() {
   return await get_all();
 }
 
+async function handleGetEntriesForCurrentTabCommand() {
+  try {
+    let ok = await do_connect_to_rkl();
+    const tabQueryOptions = { active: true, currentWindow: true };
+    const [tab] = await browser.tabs.query(tabQueryOptions);
+    let url = (new URL(tab.url));
+    console.debug(`Retrieving entries for: ${url.hostname}`);
+    let entriesJson = await get_filtered(url.hostname);
+    const entries = JSON.parse(entriesJson);
+    if (entries.length > 1) {
+      console.warn(`"More than one entries found for ${url}. TODO: Handle it"`);
+    } else if (entries.length == 1) {
+      let decryptedEntriesJson = await get_decrypted(entries[0].name);
+      const [decryptedEntry] = JSON.parse(decryptedEntriesJson);
+      fillFieldsOfTab(tab, decryptedEntry.user, decryptedEntry.pass);
+    } else {
+      console.info(`"No entries found for ${url}"`);
+    }
+  } catch (err) {
+    onError(err);
+  }
+}
+
+function fillFieldsOfTab(tab, user, pass) {
+  browser.tabs.sendMessage(
+    tab.id,
+    {
+      user: user,
+      pass: pass,
+      function_type: "auto"
+    });
+}
+
 function handleMessage(request, sender, sendResponse) {
-  console.log(`Received command: ${request.command} from ${sender}`);
-  if (request.command == "getAll") {
+  const command = request.command;
+  console.log(`Received command: ${command}`);
+  if (command == "getAll") {
     do_get_all()
       .then((resp) => {
         sendResponse({ response: resp });
@@ -55,21 +98,22 @@ function handleMessage(request, sender, sendResponse) {
         onError(err);
         sendResponse({ response: `"${err}"` });
       });
-  } else if (request.command == "connectToRkl") {
-    browser.storage.local.get()
-      .then((creds) => {
-        let token = creds.authCredentials.token;
-        return do_connect_to_rkl(token);
-      })
+  } else if (command == "getEntriesForCurrentTab") {
+    sendResponse({ status: "started" });
+    handleGetEntriesForCurrentTabCommand()
+      .catch((err) => {
+        onError(err);
+      });
+  } else if (command == "connectToRkl") {
+    do_connect_to_rkl()
       .then((resp) => {
-        console.debug(`Connected to rust-keylock: ${resp}`);
         sendResponse({ response: resp });
       })
       .catch((err) => {
         onError(err);
         sendResponse({ response: `"${err}"` });
       });
-  } else if (request.command == "resetPake") {
+  } else if (command == "resetPake") {
     reset_pake()
       .then((resp) => {
         console.debug(`Reset PAKE: ${resp}`);
@@ -138,32 +182,27 @@ async function doCreateContextMenus(forUrl) {
 
 async function handleOnContextMenuClicked(info, tab) {
   await get_decrypted(info.menuItemId)
-  .then(async (entriesJson) => {
-    const entries = JSON.parse(entriesJson);
-  
-    if (entries.length > 0) {
-      if (entries.length > 1) {
-        console.warn(`"More than one entries found with the name ${info.menuItemId}. Using the first..."`);
+    .then(async (entriesJson) => {
+      const entries = JSON.parse(entriesJson);
+
+      if (entries.length > 0) {
+        if (entries.length > 1) {
+          console.warn(`"More than one entries found with the name ${info.menuItemId}. Using the first..."`);
+        }
+        await fillFieldOfTab(tab, entries[0].user, entries[0].pass);
       }
-      await fillFieldOfTab(tab, entries[0].user, entries[0].pass);
-    }
-  })
-  .catch(onError)
-  
+    })
+    .catch(onError)
+
 }
 
 async function fillFieldOfTab(tab, user, pass) {
-  // await do_connect_to_rkl()
-  //   .then((resp) => {
-  //     console.debug(resp);
-  //   })
-  //   .catch(onError);
-
   browser.tabs.sendMessage(
     tab.id,
     {
       user: user,
-      pass: pass
+      pass: pass,
+      function_type: "manual",
     });
 }
 
