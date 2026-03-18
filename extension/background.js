@@ -36,29 +36,29 @@ async function initializeRustKeylockWasm() {
   // And afterwards we can use all the functionality defined in wasm.
 }
 
-async function getSavedToken() {
+async function getSavedPassphrase() {
   try {
     let creds = await browser.storage.local.get();
-    let token = creds.authCredentials.token;
-    return token;
+    let passphrase = creds.authCredentials.passphrase;
+    return passphrase;
   } catch (err) {
     onError(err);
-    return "Error while retrieving saved token";
+    return "Error while retrieving saved passphrase";
   }
 }
 
 async function getStatus() {
   let resp = {
-    tokenOk: false,
+    passphraseOk: false,
     pakeExecuted: false,
     pakeSessionValid: false,
     communicationErrorWithRkl: false,
   };
 
   try {
-    let token = await getSavedToken();
-    if (token != null) {
-      resp.tokenOk = true;
+    let passphrase = await getSavedPassphrase();
+    if (passphrase != null) {
+      resp.passphraseOk = true;
     } else {
       console.debug(`Passphrase is not configured`);
     }
@@ -86,8 +86,8 @@ async function getStatus() {
 
 async function do_connect_to_rkl() {
   try {
-    let token = await getSavedToken();
-    let resp = await connect_to_rkl(token);
+    let passphrase = await getSavedPassphrase();
+    let resp = await connect_to_rkl(passphrase);
     console.debug(`Connected to rust-keylock: ${resp}`);
     return resp;
   } catch (err) {

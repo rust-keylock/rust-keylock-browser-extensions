@@ -1,4 +1,4 @@
-const tokenInput = document.querySelector("#token");
+const passphraseInput = document.querySelector("#passphrase");
 
 /*
 Store the currently selected settings using browser.storage.local.
@@ -6,7 +6,7 @@ Store the currently selected settings using browser.storage.local.
 function storeSettings() {
   browser.storage.local.set({
     authCredentials: {
-      token: tokenInput.value
+      passphrase: passphraseInput.value
     }
   });
 }
@@ -16,7 +16,7 @@ Update the options UI with the settings values retrieved from storage,
 or the default settings if the stored settings are empty.
 */
 function updateUI(restoredSettings) {
-  tokenInput.value = restoredSettings.authCredentials.token || "";
+  passphraseInput.value = restoredSettings.authCredentials.passphrase || "";
 }
 
 function onError(e) {
@@ -32,4 +32,4 @@ gettingStoredSettings.then(updateUI, onError);
 /*
 On blur, save the currently selected settings.
 */
-tokenInput.addEventListener("blur", storeSettings);
+passphraseInput.addEventListener("blur", storeSettings);

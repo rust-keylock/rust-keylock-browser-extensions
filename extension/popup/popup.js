@@ -51,7 +51,7 @@ async function updateStatus() {
         })
         let response = responseObject.response;
         console.debug("Received status response: " + JSON.stringify(response));
-        if (response.tokenOk) {
+        if (response.passphraseOk) {
             passphraseConfiguredTick.className = "success";
         } else {
             passphraseConfiguredTick.className = "failure";
