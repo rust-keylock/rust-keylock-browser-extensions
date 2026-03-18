@@ -4,49 +4,6 @@ body {
     font-family: "Helvetica", Sans-Serif;
 }
 
-#userInput {
-    box-sizing: border-box;
-    /* background-image: url('../icons/rkl-48.png'); */
-    background-position: 14px 12px;
-    background-repeat: no-repeat;
-    font-size: 16px;
-    padding: 14px 20px 12px 45px;
-    border: none;
-    border-bottom: 1px solid #ddd;
-}
-
-#userInput:focus {
-    outline: 3px solid #ddd;
-}
-
-.dropdown {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f6f6f6;
-    min-width: 230px;
-    overflow: auto;
-    border: 1px solid #ddd;
-    z-index: 1;
-    width: 100%;
-}
-
-.dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
-
-.dropdown a:hover {
-    background-color: #ddd;
-}
-
 .show {
     display: block;
 }
@@ -68,15 +25,35 @@ body {
     text-align: right;
 }
 
-.infoIcon {
-    text-align: left;
-    position: relative;
-    display: inline-block;
+ul.status-list {
+    list-style: none;
+    /* padding-left: 20px; */
 }
 
-.infoIcon .tooltiptext {
+ul.status-list li {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+ul.status-list li.success::before {
+    content: '\2713';
+    color: green;
+    font-weight: bold;
+    position: absolute;
+    left: -20px;
+}
+
+ul.status-list li.failure::before {
+    content: '\2717';
+    color: red;
+    font-weight: bold;
+    position: absolute;
+    left: -20px;
+}
+
+ul.status-list .tooltiptext {
     visibility: hidden;
-    width: 330px;
+    width: 100%;
     background-color: black;
     color: #fff;
     text-align: center;
@@ -85,10 +62,16 @@ body {
 
     position: absolute;
     z-index: 2;
-    top: -5px;
-    right: 105%;
+    top: 0;
+    left: 0;
+    pointer-events: none; 
 }
 
-.infoIcon:hover .tooltiptext {
+ul.status-list .tooltiptext p {
+    margin: 0;
+    padding: 5px 10px; /* Adds nice breathing room inside the black box */
+}
+
+.failure:hover .tooltiptext {
     visibility: visible;
-  }
+}

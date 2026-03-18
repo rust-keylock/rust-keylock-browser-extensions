@@ -15,58 +15,43 @@
         <img src="../icons/rkl-96.png" alt="rust-keylock" />
     </div>
 
-    <div class="dropdown" id="connectedDiv">
-        <div class="centered">
-            <table class="centered">
-                <tbody>
-                    <tr>
-                        <td>
-                            <h3>Available Passwords</h3>
-                        </td>
-                        <td>
-                            <div class="infoIcon">
-                                <img src="../icons/info-48.png" alt="info" height="24" width="24">
-                                <span class="tooltiptext">
-                                    <p>The rust-keylock extension offers passwords that are saved in the rust-keylock
-                                        application to be used in Web pages.
-                                    </p>
-                                    <p>When you visit a Web page where you need to provide credentials, right click on
-                                        the input/password field. Any
-                                        password entries that are created for the URL of this Web page will be offered
-                                        to fill-in.</p>
-                                    <p>Additionally, you may also select any password entries from the list below so
-                                        that they are
-                                        always offered for filling-in,
-                                        regardless if the visited page URL matches the URL defined in the password
-                                        entry. </p>
-                                </span>
-                                </img>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-        </div>
-        <p>Ticking a password will make it always available in the rust-keylock context menu</p>
-        <input type="text" placeholder="Find a password" id="userInput" class="userInput">
-        <div id="passwordsDropdown" class="dropdown-content">
-            <table>
-                <tbody>
-                    <tr>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="centered">
+        <div class="leftColumn">
+            <ul class="status-list">
+                <li class="failure" id="passphraseConfiguredTick">Passphrase configured
+                    <span class="tooltiptext">
+                        Open the configuration screen of the rust-keylock application, copy the "Browser Excension Passphrase" (generate one if empty) 
+                        and paste it in the rust-keylock browser extension preferences.
+                    </span>
+                </li>
+                <li class="failure" id="pakeExecutedTick">
+                    Communication with the rust-keylock app initialized
+                    <span class="tooltiptext">
+                        Make sure the rust-keylock application is running and is unlocked.
+                    </span>
+                </li>
+                <li class="failure" id="pakeSessionValidTick">
+                    Session with the rust-keylock app is valid
+                    <span class="tooltiptext">
+                        Make sure the rust-keylock application is running and is unlocked. Then, press the link below to re-establish connection.
+                    </span>
+                </li>
+                <li class="failure" id="communicationOkTick">
+                    Communication with rust-keylock app is healthy
+                    <span class="tooltiptext">
+                        Make sure the rust-keylock application is running and is unlocked. Then, press the link below to re-establish connection.
+                    </span>
+                </li>
+            </ul>
         </div>
     </div>
-    <div id="disconnectedDiv">
-        <h3>Not connected</h3>
-        <p>Please make sure the rusk-keylock application is running and is unlocked</p>
-        <button type="button" id="connectButton">Click to Reset</button>
-    </div>
-
+    <p>
+        In case any of the above is not Ok, please make sure that the <b>rust-keylock</b> application is running and is
+        unlocked and <a href='#' id="connectLink">click here</a> to retry establishing connection.
+    </p>
+    <p>
+        Tip: hovering any errors reveals a tooltip with details.
+    </p>
     <script src="popup.js"></script>
 </body>
 

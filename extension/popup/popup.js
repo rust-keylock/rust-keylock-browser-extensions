@@ -1,11 +1,10 @@
-const userInput = document.querySelector("#userInput");
-const passwordsDropdownDiv = document.querySelector("#passwordsDropdown");
-const connectedDiv = document.querySelector("#connectedDiv");
-const disconnectedDiv = document.querySelector("#disconnectedDiv");
-const connectButton = document.querySelector("#connectButton");
+const connectLink = document.querySelector("#connectLink");
+const passphraseConfiguredTick = document.querySelector("#passphraseConfiguredTick");
+const pakeExecutedTick = document.querySelector("#pakeExecutedTick");
+const pakeSessionValidTick = document.querySelector("#pakeSessionValidTick");
+const communicationOkTick = document.querySelector("#communicationOkTick");
 
-userInput.addEventListener("keyup", filterFunction);
-connectButton.addEventListener("click", async () => {
+connectLink.addEventListener("click", async () => {
     await sendResetPakeMessage();
     await sendConnectMessage();
     window.close();
@@ -44,135 +43,37 @@ async function sendConnectMessage() {
     }
 }
 
-function emptyPasswords() {
-    console.debug("Emptying passwords");
-    passwordsDropdownDiv.replaceChildren();
-}
-
-async function fillPasswords(connected) {
-    emptyPasswords();
-    if (connected) {
-        connectedDiv.style.display = "";
-        disconnectedDiv.style.display = "none";
-        console.debug("Filling passwords with connected " + connected);
-        const sending = browser.runtime.sendMessage({
-            command: "getAll",
-        });
-        sending.then(showPasswords)
-            .catch((err) => {
-                onError(err);
-                connectedDiv.style.display = "none";
-                disconnectedDiv.style.display = "";
-            });
-    } else {
-        connectedDiv.style.display = "none";
-        disconnectedDiv.style.display = "";
-    }
-}
-
-async function showPasswords(message) {
-    var json = message.response;
-    let table = document.createElement("table");
-    table.className = "centered";
-    passwordsDropdownDiv.appendChild(table);
-    let tbody = document.createElement("tbody");
-    table.appendChild(tbody);
-    const entries = JSON.parse(json);
-
-    // Get the stored entries and clean any stale/invalid ones
-    let storedEntries = await retrieveStoredEntries();
-    storedEntries.forEach(async (storedEntry) => {
-        let isStoredEntryValid = entries.find(e => e.name == storedEntry.name);
-        if (!isStoredEntryValid) {
-            console.debug(`Removing invalid entry ${storedEntry.name} from stored entries`);
-            await handleDbEntry(storedEntry, false);
-        }
-        return true;
-    });
-    // Get the cleaned dtored entries
-    let cleanedStoredEntries = await retrieveStoredEntries();
-    entries.forEach(async (entry) => {
-        let htmlElement = await createHtmlElement(entry, cleanedStoredEntries);
-        tbody.appendChild(htmlElement);
-        return true;
-    });
-
-    passwordsDropdownDiv.classList.toggle("show");
-}
-
-async function retrieveStoredEntries() {
-    let stored = await browser.storage.local.get("entries");
-    let storedEntries = stored.entries;
-    if (storedEntries == undefined) {
-        console.debug(`storedSettings entries do not exist yet. Creating...`);
-        await browser.storage.local.set({
-            entries: []
-        });
-        let stored = await browser.storage.local.get("entries");
-        storedEntries = stored.entries;
-    } else {
-        let stored = await browser.storage.local.get("entries");
-        storedEntries = stored.entries;
-        console.debug(`Retrieved storedSettings ${storedEntries}`);
-    }
-    return storedEntries;
-}
-
-async function createHtmlElement(entry, storedEntries) {
-    let tr = document.createElement("tr");
-    let tdEntry = document.createElement("td");
-    tdEntry.className = "leftColumn";
-    let tdTick = document.createElement("td");
-    tdTick.className = "rightColumn";
-    tr.appendChild(tdEntry);
-    tr.appendChild(tdTick);
-
-    let a = document.createElement("a");
-    var content = `${entry.name} (username: ${entry.user})`
-    console.debug(`Adding to dropdown ${content}`);
-    a.textContent = content;
-    a.value = content;
-    a.innerText = content;
-    tdEntry.appendChild(a);
-
-    let checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.addEventListener("change", async () => await handleDbEntry(entry, checkbox.checked));
-    checkbox.checked = storedEntries.find(storedEntry => storedEntry.name == entry.name);
-    tdTick.appendChild(checkbox);
-
-    return tr;
-}
-
-async function handleDbEntry(entry, checked) {
-    console.debug(`Handling DB for ${entry.name}: ${checked}`);
-    let stored = await browser.storage.local.get("entries");
-    let storedEntries = Array.from(stored.entries);
-    console.debug(`Stored Entries size: ${storedEntries.length}`);
-
-    if (checked) {
-        storedEntries.push({ name: entry.name, user: entry.user });
-    } else {
-        storedEntries = storedEntries.filter(savedEntry => savedEntry.name != entry.name);
-    }
-
-    console.debug(`New Stored Entries size: ${storedEntries.length}`);
-    await browser.storage.local.set({
-        entries: storedEntries
-    });
-}
-
-function filterFunction() {
-    const filter = userInput.value.toUpperCase();
-    const a = passwordsDropdownDiv.getElementsByTagName("tr");
-
-    for (let i = 0; i < a.length; i++) {
-        txtValue = a[i].textContent || a[i].innerText;
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            a[i].style.display = "";
+async function updateStatus() {
+    console.debug("Updating status");
+    try {
+        let responseObject = await browser.runtime.sendMessage({
+            command: "status",
+        })
+        let response = responseObject.response;
+        console.debug("Received status response: " + JSON.stringify(response));
+        if (response.tokenOk) {
+            passphraseConfiguredTick.className = "success";
         } else {
-            a[i].style.display = "none";
+            passphraseConfiguredTick.className = "failure";
         }
+        if (response.pakeExecuted) {
+            pakeExecutedTick.className = "success";
+        } else {
+            pakeExecutedTick.className = "failure";
+        }
+        if (response.pakeSessionValid) {
+            pakeSessionValidTick.className = "success";
+        } else {
+            pakeSessionValidTick.className = "failure";
+        }
+        if (response.communicationErrorWithRkl) {
+            communicationOkTick.className = "failure";
+        } else {
+            communicationOkTick.className = "success";
+        }
+    } catch (err) {
+        onError(err);
+        return false;
     }
 }
 
@@ -180,6 +81,4 @@ function onError(error) {
     console.error(`Error: ${error}`);
 }
 
-connectedDiv.style.display = "none";
-disconnectedDiv.style.display = "";
-sendConnectMessage().then(fillPasswords);
+updateStatus();

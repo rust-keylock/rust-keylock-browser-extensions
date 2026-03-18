@@ -12,6 +12,7 @@ use wasm_bindgen::prelude::*;
 const RKL_GET_ALL: &str = "http://127.0.0.1:9876/entries";
 const RKL_GET_DECRYPTED: &str = "http://127.0.0.1:9876/decrypted";
 const RKL_PAKE: &str = "http://127.0.0.1:9876/pake";
+const RKL_PAKE_STATUS: &str = "http://127.0.0.1:9876/pake_status";
 const TICKET_HEADER: &str = "ticket";
 
 lazy_static! {
@@ -58,6 +59,11 @@ fn main() -> Result<(), JsValue> {
     // body.append_child(&val)?;
 
     Ok(())
+}
+
+#[wasm_bindgen]
+pub async fn is_pake_executed() -> Result<bool, String> {
+    get_session_key().and_then(|_| Ok(true))
 }
 
 #[wasm_bindgen]
@@ -173,6 +179,30 @@ pub async fn get_decrypted(name: String) -> Result<String, String> {
     Ok(from_utf8(&decrypted_bytes)
         .map_err(|e| format!("{e}"))?
         .to_string())
+}
+
+#[wasm_bindgen]
+pub async fn is_pake_valid() -> Result<bool, String> {
+    log(&format!("Checking PAKE session key validity:"));
+    let client = reqwest::Client::new();
+
+    let bytes = client
+        .get(RKL_PAKE_STATUS)
+        .header(TICKET_HEADER, get_ticket()?)
+        .send()
+        .await
+        .map_err(|e| format!("{e}"))?
+        .bytes()
+        .await
+        .map_err(|e| format!("{e}"))?;
+
+    let decrypted_bytes = decrypt(&get_session_key()?, &bytes)?;
+    let status = from_utf8(&decrypted_bytes)
+        .map_err(|e| format!("{e}"))?
+        .to_string();
+    log(&format!("Retrieved decrypted status: {status}"));
+
+    Ok(true)
 }
 
 async fn execute_pake(password: &str) -> Result<(Vec<u8>, usize), String> {

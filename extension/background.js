@@ -1,4 +1,4 @@
-import init, { connect_to_rkl, get_all, get_decrypted, get_filtered, reset_pake } from './pkg/rust_keylock_browser_extension.js';
+import init, { connect_to_rkl, get_all, get_decrypted, get_filtered, is_pake_executed, is_pake_valid, reset_pake } from './pkg/rust_keylock_browser_extension.js';
 
 browser.contextMenus.onShown.addListener(async (info, tab) => await handleOnContextMenuShown(info, tab));
 browser.contextMenus.onClicked.addListener(async (info, tab) => await handleOnContextMenuClicked(info, tab));
@@ -36,10 +36,57 @@ async function initializeRustKeylockWasm() {
   // And afterwards we can use all the functionality defined in wasm.
 }
 
-async function do_connect_to_rkl() {
+async function getSavedToken() {
   try {
     let creds = await browser.storage.local.get();
     let token = creds.authCredentials.token;
+    return token;
+  } catch (err) {
+    onError(err);
+    return "Error while retrieving saved token";
+  }
+}
+
+async function getStatus() {
+  let resp = {
+    tokenOk: false,
+    pakeExecuted: false,
+    pakeSessionValid: false,
+    communicationErrorWithRkl: false,
+  };
+
+  try {
+    let token = await getSavedToken();
+    if (token != null) {
+      resp.tokenOk = true;
+    } else {
+      console.debug(`Passphrase is not configured`);
+    }
+    let pakeExecuted = await is_pake_executed();
+    if (pakeExecuted == true) {
+      resp.pakeExecuted = true;
+    } else {
+      console.debug(`PAKE not executed`);
+    }
+
+    let pakeSessionValid = await is_pake_valid();
+    if (pakeSessionValid == true) {
+      resp.pakeSessionValid = true;
+    } else {
+      console.debug(`PAKE session is not valid`);
+    }
+
+    return resp;
+  } catch (err) {
+    onError(err);
+    resp.communicationErrorWithRkl = true;
+    return resp;
+  }
+}
+
+async function do_connect_to_rkl() {
+  try {
+    let token = await getSavedToken();
     let resp = await connect_to_rkl(token);
     console.debug(`Connected to rust-keylock: ${resp}`);
     return resp;
@@ -99,7 +146,10 @@ function handleMessage(request, sender, sendResponse) {
         sendResponse({ response: `"${err}"` });
       });
   } else if (command == "getEntriesForCurrentTab") {
+    // Need to send the response immediately before the conduit gets invalidated
+    // The message comes from the pageAction and this has a temporary/fast lifecycle
     sendResponse({ status: "started" });
+    // Then, we can continue retrieving the entries and later send message to the contentscript.
     handleGetEntriesForCurrentTabCommand()
       .catch((err) => {
         onError(err);
@@ -117,6 +167,15 @@ function handleMessage(request, sender, sendResponse) {
     reset_pake()
       .then((resp) => {
         console.debug(`Reset PAKE: ${resp}`);
+        sendResponse({ response: resp });
+      })
+      .catch((err) => {
+        onError(err);
+        sendResponse({ response: `"${err}"` });
+      });
+  } else if (command == "status") {
+    getStatus()
+      .then((resp) => {
         sendResponse({ response: resp });
       })
       .catch((err) => {
