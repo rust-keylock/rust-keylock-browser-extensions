@@ -89,6 +89,9 @@ async function do_connect_to_rkl() {
     let passphrase = await getSavedPassphrase();
     let resp = await connect_to_rkl(passphrase);
     console.debug(`Connected to rust-keylock: ${resp}`);
+    // Keep connection alive every 3 minutes
+    browser.alarms.clearAll();
+    browser.alarms.create("rkl", {periodInMinutes: 3});
     return resp;
   } catch (err) {
     onError(err);
@@ -262,6 +265,18 @@ async function fillFieldOfTab(tab, user, pass) {
       user: user,
       pass: pass,
       function_type: "manual",
+    });
+}
+
+browser.alarms.onAlarm.addListener((_) => {
+  keepConnectinonAlive();
+});
+
+function keepConnectinonAlive() {
+  console.debug("Keeping alive the connection to rkl");
+  get_filtered("_thisentryprobablydoesnotexist_")
+    .catch((err) => {
+      onError(err);
     });
 }
 

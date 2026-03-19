@@ -62,6 +62,7 @@
     "contextMenus",
     "*://127.0.0.1/*",
     "tabs",
+    "alarms",
     "storage"
   ]
 }
