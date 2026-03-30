@@ -21,7 +21,7 @@
       }
     },
     "gecko_android": {
-      "strict_min_version": "113.0"
+      "strict_min_version": "121.0"
     }
   },
 
@@ -39,17 +39,17 @@
 
   "browser_action": {
     "default_icon": "icons/rkl-48.png",
-    "default_title": "rust-keylock",
+    "default_title": "rust-keylock status",
     "default_popup": "popup/popup.html"
   },
 
   "page_action": {
     "default_icon": {
-      "48": "icons/rkl-16.png",
+      "16": "icons/rkl-16.png",
       "48": "icons/rkl-48.png",
       "96": "icons/rkl-96.png"
     },
-    "default_title": "rust-keylock",
+    "default_title": "Fill current page with rust-keylock",
     "default_popup": "pageActionPopup/pageActionPopup.html",
     "show_matches": ["https://*/*"]
   },

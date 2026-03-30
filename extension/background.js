@@ -1,7 +1,5 @@
 import init, { connect_to_rkl, get_all, get_decrypted, get_filtered, is_pake_executed, is_pake_valid, reset_pake } from './pkg/rust_keylock_browser_extension.js';
 
-browser.contextMenus.onShown.addListener(async (info, tab) => await handleOnContextMenuShown(info, tab));
-browser.contextMenus.onClicked.addListener(async (info, tab) => await handleOnContextMenuClicked(info, tab));
 browser.runtime.onMessage.addListener(handleMessage);
 
 async function initializeRustKeylockWasm() {
@@ -189,83 +187,6 @@ function handleMessage(request, sender, sendResponse) {
   // Need to return true for async handling
   // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#sending_an_asynchronous_response_using_sendresponse
   return true;
-}
-
-async function handleOnContextMenuShown(info, tab) {
-  doCreateContextMenus(tab.url);
-}
-
-async function doCreateContextMenus(forUrl) {
-  browser.contextMenus.removeAll();
-
-  let url = (new URL(forUrl));
-
-  // Get the passwords for the current URL
-  const all = await get_filtered(url.hostname);
-  const allElems = JSON.parse(all);
-
-  allElems.forEach((elem) => {
-    // Callback reads runtime.lastError to prevent an unchecked error from being 
-    // logged when the extension attempt to register the already-registered menu 
-    // again. Menu registrations in event pages persist across extension restarts.
-    browser.contextMenus.create({
-      id: elem.name,
-      title: `"${elem.name} (Username: ${elem.user})"`,
-      contexts: ["editable", "password"],
-    },
-      // See https://extensionworkshop.com/documentation/develop/manifest-v3-migration-guide/#event-pages-and-backward-compatibility
-      // for information on the purpose of this error capture.
-      () => void browser.runtime.lastError,
-    );
-
-  });
-
-  // Get the passwords from the storage
-  let stored = await browser.storage.local.get("entries");
-  let storedEntries = Array.from(stored.entries);
-  storedEntries.forEach((entry) => {
-    // Callback reads runtime.lastError to prevent an unchecked error from being 
-    // logged when the extension attempt to register the already-registered menu 
-    // again. Menu registrations in event pages persist across extension restarts.
-    browser.contextMenus.create({
-      id: entry.name,
-      title: `"${entry.name} (Username: ${entry.user})"`,
-      contexts: ["editable", "password"],
-    },
-      // See https://extensionworkshop.com/documentation/develop/manifest-v3-migration-guide/#event-pages-and-backward-compatibility
-      // for information on the purpose of this error capture.
-      () => void browser.runtime.lastError,
-    );
-
-  });
-
-  browser.contextMenus.refresh();
-}
-
-async function handleOnContextMenuClicked(info, tab) {
-  await get_decrypted(info.menuItemId)
-    .then(async (entriesJson) => {
-      const entries = JSON.parse(entriesJson);
-
-      if (entries.length > 0) {
-        if (entries.length > 1) {
-          console.warn(`"More than one entries found with the name ${info.menuItemId}. Using the first..."`);
-        }
-        await fillFieldOfTab(tab, entries[0].user, entries[0].pass);
-      }
-    })
-    .catch(onError)
-
-}
-
-async function fillFieldOfTab(tab, user, pass) {
-  browser.tabs.sendMessage(
-    tab.id,
-    {
-      user: user,
-      pass: pass,
-      function_type: "manual",
-    });
 }
 
 browser.alarms.onAlarm.addListener((_) => {

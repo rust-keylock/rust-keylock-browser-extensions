@@ -7,7 +7,7 @@ const communicationOkTick = document.querySelector("#communicationOkTick");
 connectLink.addEventListener("click", async () => {
     await sendResetPakeMessage();
     await sendConnectMessage();
-    window.close();
+    window.location.reload();
 });
 
 async function sendResetPakeMessage() {
@@ -48,7 +48,7 @@ async function updateStatus() {
     try {
         let responseObject = await browser.runtime.sendMessage({
             command: "status",
-        })
+        });
         let response = responseObject.response;
         console.debug("Received status response: " + JSON.stringify(response));
         if (response.passphraseOk) {
